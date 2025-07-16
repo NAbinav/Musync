@@ -9,13 +9,13 @@ from collections import deque
 
 # Configuration
 LISTEN_PORT = 5005
-CHUNK = 2096
+CHUNK = 2048
 RATE = 48000
 CHANNELS = 2
 FORMAT = pyaudio.paInt16
-BUFFER_SIZE = 65536
-MAX_QUEUE_SIZE = 20
-INITIAL_BUFFER_SIZE = 5
+BUFFER_SIZE = 131072
+MAX_QUEUE_SIZE = 30
+INITIAL_BUFFER_SIZE = 8
 
 # Global variables
 audio_queue = queue.Queue()
