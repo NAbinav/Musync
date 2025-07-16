@@ -9,7 +9,7 @@ from collections import deque
 
 # Configuration
 LISTEN_PORT = 5005
-CHUNK = 512
+CHUNK = 2096
 RATE = 48000
 CHANNELS = 2
 FORMAT = pyaudio.paInt16
