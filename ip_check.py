@@ -30,8 +30,7 @@ def check_addr(ip):
 def ping(ip):
     """Pings an address"""
     # if 0, connection didn't fail
-    return subprocess.call(['ping', '-c', '1', ip]) == 0
-
+    return subprocess.call(['ping', '-c', '1', '-W', '1', ip]) == 0
 
 def choose_iface():
     print("Available Interfaces:\n")
