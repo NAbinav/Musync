@@ -1,41 +1,37 @@
 import socket
-import sys
 import time
 
-HOST = '192.168.1.17'    # Replace with your server IP
+HOST = '192.168.1.17'  # Replace with Termux device IP or use '127.0.0.1' if on same device
 PORT = 50007
 DATA_SIZE = 65526
-data_to_send = b'H' * DATA_SIZE
+NUM_ITERATIONS = 10  # Number of send/receive cycles
+data_to_send = b'a' * DATA_SIZE
 
-s = None
-for res in socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM):
-    af, socktype, proto, canonname, sa = res
-    try:
-        s = socket.socket(af, socktype, proto)
-    except OSError:
-        s = None
-        continue
-    try:
-        s.connect(sa)
-    except OSError:
-        s.close()
-        s = None
-        continue
-    break
+total_bytes = 0
+total_time = 0
 
-if s is None:
-    print('Could not open socket')
-    sys.exit(1)
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    
+    for i in range(NUM_ITERATIONS):
+        start = time.perf_counter()
+        s.sendall(data_to_send)
+        received = s.recv(DATA_SIZE)
+        end = time.perf_counter()
 
-with s:
-    start_time = time.perf_counter()
-    s.sendall(data_to_send)
-    data = s.recv(DATA_SIZE)
-    end_time = time.perf_counter()
+        if not received:
+            break
 
-duration = end_time - start_time
-speed_mbps = (len(data) * 8) / (duration * 1_000_000)
+        elapsed = end - start
+        total_time += elapsed
+        total_bytes += len(received)
 
-print(f"Received {len(data)} bytes in {duration:.6f} seconds")
-print(f"Transfer speed: {speed_mbps:.2f} Mbps")
+        print(f"Iteration {i+1}: {len(received)} bytes in {elapsed:.6f} seconds")
+
+# Calculate speed
+speed_mbps = (total_bytes * 8) / (total_time * 1_000_000)  # bits per second -> megabits/sec
+speed_MBps = total_bytes / (total_time * 1024 * 1024)      # bytes per second -> megabytes/sec
+
+print(f"\nTotal: {total_bytes} bytes in {total_time:.6f} seconds")
+print(f"Transfer speed: {speed_mbps:.2f} Mbps ({speed_MBps:.2f} MB/s)")
 
