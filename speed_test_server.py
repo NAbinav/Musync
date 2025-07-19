@@ -1,34 +1,33 @@
 import socket
-import time
+import sys
 
-HOST = '0.0.0.0'  # Listen on all interfaces
-PORT = 6000
-BUFFER_SIZE = 65536  # 64 KB
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((HOST, PORT))
-s.listen(1)
-print(f"📡 Server listening on port {PORT}...")
-
+HOST = None               # Symbolic name meaning all available interfaces
+PORT = 50007              # Arbitrary non-privileged port
+s = None
+for res in socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC,
+                              socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
+    af, socktype, proto, canonname, sa = res
+    try:
+        s = socket.socket(af, socktype, proto)
+    except OSError as msg:
+        s = None
+        continue
+    try:
+        s.bind(sa)
+        s.listen(1)
+    except OSError as msg:
+        s.close()
+        s = None
+        continue
+    break
+if s is None:
+    print('could not open socket')
+    sys.exit(1)
 conn, addr = s.accept()
-print(f"✅ Connected by {addr}")
-
-start_time = time.time()
-total_received = 0
-
-while True:
-    data = conn.recv(BUFFER_SIZE)
-    if not data:
-        break
-    total_received += len(data)
-
-end_time = time.time()
-duration = end_time - start_time
-speed_mbps = (total_received * 8) / (duration * 1_000_000)  # Convert to Mbps
-
-print(f"\n📥 Received {total_received / (1024*1024):.2f} MB in {duration:.2f} seconds")
-print(f"⚡ Speed: {speed_mbps:.2f} Mbps")
-
-conn.close()
-s.close()
+with conn:
+    print('Connected by', addr)
+    while True:
+        data = conn.recv(65526)
+        if not data: break
+        conn.send(data)
 

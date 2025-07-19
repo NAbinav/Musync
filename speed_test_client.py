@@ -1,31 +1,41 @@
 import socket
+import sys
 import time
 
-SERVER_IP = '192.168.1.16'  # Replace with your server's IP
-PORT = 6000
-BUFFER_SIZE = 65536  # 64 KB
-TOTAL_MB = 100       # How much to send
+HOST = '192.168.1.17'    # Replace with your server IP
+PORT = 50007
+DATA_SIZE = 65526
+data_to_send = b'H' * DATA_SIZE
 
-total_bytes = TOTAL_MB * 1024 * 1024
-data_chunk = b'a' * BUFFER_SIZE  # Dummy data
+s = None
+for res in socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM):
+    af, socktype, proto, canonname, sa = res
+    try:
+        s = socket.socket(af, socktype, proto)
+    except OSError:
+        s = None
+        continue
+    try:
+        s.connect(sa)
+    except OSError:
+        s.close()
+        s = None
+        continue
+    break
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((SERVER_IP, PORT))
-print(f"🚀 Sending {TOTAL_MB} MB to {SERVER_IP}:{PORT}...")
+if s is None:
+    print('Could not open socket')
+    sys.exit(1)
 
-start_time = time.time()
-sent = 0
+with s:
+    start_time = time.perf_counter()
+    s.sendall(data_to_send)
+    data = s.recv(DATA_SIZE)
+    end_time = time.perf_counter()
 
-while sent < total_bytes:
-    s.sendall(data_chunk)
-    sent += len(data_chunk)
-
-end_time = time.time()
 duration = end_time - start_time
-speed_mbps = (sent * 8) / (duration * 1_000_000)
+speed_mbps = (len(data) * 8) / (duration * 1_000_000)
 
-print(f"\n📤 Sent {TOTAL_MB} MB in {duration:.2f} seconds")
-print(f"⚡ Speed: {speed_mbps:.2f} Mbps")
-
-s.close()
+print(f"Received {len(data)} bytes in {duration:.6f} seconds")
+print(f"Transfer speed: {speed_mbps:.2f} Mbps")
 
