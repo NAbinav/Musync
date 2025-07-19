@@ -5,9 +5,9 @@ import time
 import numpy as np
 
 # Configuration
-TARGET_IP = '192.168.1.17'  # Replace with your receiver IP
+TARGET_IP = '192.168.1.16'  # Replace with your receiver IP
 TARGET_PORT = 5005
-CHUNK = 2048
+CHUNK = 512
 BUFFER_SIZE = 131072
 
 def list_audio_devices():
